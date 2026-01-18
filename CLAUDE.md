@@ -1,0 +1,108 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Repository Overview
+
+This is a collection of AI agent workflows and development guides (primarily in Chinese). It contains:
+
+- **Agent Harness Workflow** (`workflow/agent.md`) - A structured TDD-based development workflow with task management
+- **WorkTeam Workflow** (`common/workTeam.md`) - A role-based product development pipeline
+- **Skills** (`skills/`) - Claude Code skills for the Agent Harness workflow
+- **Testing Guides** (`common/`) - Spock testing guides for Java/Groovy and Go
+
+## Agent Harness Workflow
+
+The primary workflow for structured development using TDD. Core commands:
+
+| Command | Purpose |
+|---------|---------|
+| `/plan-init` | Initialize project, create `features.json` and `logs/` directory |
+| `/plan-next` | Execute next pending task using TDD cycle (RED → GREEN → COMMIT) |
+| `/plan-log` | Manually log non-task progress (architecture decisions, urgent fixes) |
+| `/plan-archive` | Archive completed work to `archives/YYYY-MM-DD-HHMMSS/` |
+
+### Key Files
+- `features.json` - Single source of truth for tasks (array of task objects with `passes: boolean`)
+- `logs/init.log` - Initialization log
+- `logs/task-{id}.log` - Per-task isolated logs (each task gets 3-5 phase logs)
+- `logs/manual-{date}.log` - Manual log entries
+
+### Task Execution Flow (plan-next)
+1. **READ** - Find first task with `passes: false`
+2. **EXPLORE** - Analyze existing code (skip for new features)
+3. **PLAN** - Review steps, acceptance criteria, confirm boundaries
+4. **RED** - Write failing tests first
+5. **IMPLEMENT** - Minimal code to pass tests
+6. **GREEN** - Verify all tests pass, check acceptance criteria
+7. **COMMIT** - Set `passes: true`, write final log
+
+### Design Principles
+- Anti-forgetting: Restore context by reading task logs
+- Anti-scope-creep: JSON defines scope, logs provide detail
+- Precision: Only change what needs changing, never touch unrelated code
+- Senior developer perspective: Consider reusability, extensibility, robustness
+
+## Testing Guidelines
+
+### Java/Groovy (Spock Framework)
+See `common/spock-test-guide.md` for complete reference.
+
+```groovy
+// BDD structure: given-when-then
+def "test description"() {
+    given: "setup"
+    def mock = Mock(Service)
+
+    when: "action"
+    def result = target.method()
+
+    then: "verification"
+    result == expected
+}
+```
+
+Key patterns:
+- Mock with `Mock(Interface)`
+- Stub returns with `mock.method(_) >> value`
+- Verify calls with `1 * mock.method(_)` in then block
+- Data-driven tests with `where:` block and `@Unroll`
+
+### Go (Mockey + Testify)
+See `common/go_test_spock.md` for complete reference.
+
+```go
+// Table-driven tests with runtime mocking
+func TestMethod(t *testing.T) {
+    defer mockey.OffAll()
+
+    tests := []struct{
+        name string
+        // ... fields
+    }{
+        // test cases
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            mockey.Mock(SomeFunc).To(...).Build()
+            // test logic
+        })
+    }
+}
+```
+
+**Required flags for Go tests with Mockey:**
+```bash
+go test -gcflags="all=-l -N" -v ./...
+```
+
+## WorkTeam Workflow (Role-Based)
+
+A product development pipeline with 5 specialized roles:
+
+1. `/pm` - Product Manager: Collect requirements, output `prd.md`
+2. `/ui` - UI Designer: Design prompts, output `ui-prompts.md`
+3. `/nano` - Nano Banana: Generate UI images to `assets/`
+4. `/fe` - Frontend Engineer: Build frontend
+5. `/full` - Full-stack Engineer: Backend development and iteration

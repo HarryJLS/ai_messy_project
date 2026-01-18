@@ -1,0 +1,149 @@
+# =========================
+# macOS
+# =========================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# =========================
+# Windows
+# =========================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =========================
+# IDE / Editor
+# =========================
+# JetBrains (IntelliJ, GoLand, PyCharm, WebStorm)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# Vim
+*.swp
+*.swo
+*~
+
+# =========================
+# Claude Code
+# =========================
+.claude/
+
+# =========================
+# Agent Harness 工作流产物
+# =========================
+# 任务状态文件 (每次初始化生成)
+features.json
+features.backup.*.json
+
+# 日志目录 (任务执行产生)
+logs/
+
+# 归档目录 (plan-archive 产生)
+archives/
+
+# =========================
+# Skill 打包文件 (可选)
+# =========================
+# 如果 .skill 是从 SKILL.md 生成的，可以忽略
+# 取消注释以下行来忽略
+# *.skill
+
+# =========================
+# Java / Maven / Gradle
+# =========================
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+*.ear
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# =========================
+# Go
+# =========================
+vendor/
+go.sum
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+
+# =========================
+# Node.js / Frontend
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.next/
+.nuxt/
+dist/
+
+# =========================
+# Docker
+# =========================
+# 不忽略 Dockerfile，但忽略本地构建产物
+.docker/
+
+# =========================
+# 环境变量 / 敏感信息
+# =========================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials.json
+secrets.yaml
+
+# =========================
+# 日志和临时文件
+# =========================
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
