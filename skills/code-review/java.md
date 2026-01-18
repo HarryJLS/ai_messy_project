@@ -584,14 +584,140 @@ grep -rE "else\s+[^{]" --include="*.java" | grep -v "else\s+if"
 
 ---
 
-### if-else 超过 3 层
+### if 嵌套禁止超过 3 层
 
 **搜索技术**:
 - 检查嵌套深度超过 3 层的条件语句
 - 使用缩进分析或 AST 工具
 
-**通过标准**: if-else 嵌套不超过 3 层
-**严重级别**: Low
+**通过标准**: if 嵌套不超过 3 层
+**严重级别**: Medium
+**建议**: 使用提前 return 优化嵌套深度
+
+```java
+// 不推荐：嵌套超过 3 层
+if (condition1) {
+    if (condition2) {
+        if (condition3) {
+            if (condition4) {  // 第 4 层，违规
+                // ...
+            }
+        }
+    }
+}
+
+// 推荐：提前 return 减少嵌套
+if (!condition1) {
+    return;
+}
+if (!condition2) {
+    return;
+}
+if (!condition3) {
+    return;
+}
+if (condition4) {
+    // ...
+}
+```
+
+---
+
+### for 嵌套禁止超过 2 层
+
+**搜索技术**:
+- 检查嵌套深度超过 2 层的 for 循环
+- 使用缩进分析或 AST 工具
+
+**通过标准**: for 循环嵌套不超过 2 层
+**严重级别**: Medium
+**建议**: 通过抽取方法或使用 Map 优化搜索
+
+```java
+// 不推荐：嵌套超过 2 层
+for (User user : users) {
+    for (Order order : user.getOrders()) {
+        for (Item item : order.getItems()) {  // 第 3 层，违规
+            // ...
+        }
+    }
+}
+
+// 推荐方案1：抽取方法
+for (User user : users) {
+    for (Order order : user.getOrders()) {
+        processOrderItems(order);  // 抽取内层循环
+    }
+}
+
+// 推荐方案2：使用 Map 优化搜索
+Map<Long, Item> itemMap = items.stream()
+    .collect(Collectors.toMap(Item::getId, Function.identity()));
+for (Order order : orders) {
+    Item item = itemMap.get(order.getItemId());  // O(1) 查找
+    // ...
+}
+```
+
+---
+
+### 条件表达式过长
+
+**搜索模式**:
+```bash
+# 搜索 if 条件中包含超过 3 个 && 或 || 的语句
+grep -rE "if\s*\([^)]*(\&\&|\|\|)[^)]*(\&\&|\|\|)[^)]*(\&\&|\|\|)" --include="*.java"
+```
+
+**通过标准**: if 条件表达式中的条件数不超过 3 个
+**严重级别**: Medium
+**建议**: 将复杂条件提取为局部布尔变量，提高可读性
+
+```java
+// 不推荐：条件表达式过长
+if (user != null && user.isActive() && user.getAge() > 18 && user.hasPermission()) {
+    // ...
+}
+
+// 推荐：提取局部布尔变量
+boolean isValidUser = user != null && user.isActive();
+boolean isAdultWithPermission = user.getAge() > 18 && user.hasPermission();
+if (isValidUser && isAdultWithPermission) {
+    // ...
+}
+```
+
+---
+
+### 循环内 SQL 查询 (N+1 问题)
+
+**搜索模式**:
+```bash
+# 搜索 for/while 循环内的 SQL 查询调用
+grep -rE "for\s*\([^)]+\)\s*\{" --include="*.java" -A 10 | grep -E "\.(find|query|select|get).*\("
+grep -rE "while\s*\([^)]+\)\s*\{" --include="*.java" -A 10 | grep -E "\.(find|query|select|get).*\("
+```
+
+**通过标准**: 禁止在循环内执行 SQL 查询
+**严重级别**: High
+**建议**: 批量查询后转为 Map 进行处理
+
+```java
+// 不推荐：循环内查询（N+1 问题）
+for (Long userId : userIds) {
+    User user = userRepository.findById(userId);  // 每次循环都查询数据库
+    // ...
+}
+
+// 推荐：批量查询 + Map
+List<User> users = userRepository.findByIdIn(userIds);  // 一次查询
+Map<Long, User> userMap = users.stream()
+    .collect(Collectors.toMap(User::getId, Function.identity()));
+for (Long userId : userIds) {
+    User user = userMap.get(userId);  // 内存查找 O(1)
+    // ...
+}
+```
 
 ---
 

@@ -155,6 +155,96 @@ catch (Exception e) {}          catch (Exception e) {
 - Java 方法 > 70 行
 - 提供拆分方案，等待确认
 
+### if 嵌套优化
+- 检测到 if 嵌套超过 3 层
+- 建议使用提前 return 减少嵌套
+- 提供重构方案，等待确认
+
+```go
+// 检测到深嵌套
+if a {
+    if b {
+        if c {
+            if d {  // 第 4 层
+                // ...
+            }
+        }
+    }
+}
+
+// 建议重构为
+if !a { return }
+if !b { return }
+if !c { return }
+if d {
+    // ...
+}
+```
+
+### for 嵌套优化
+- 检测到 for 嵌套超过 2 层
+- 建议抽取方法或使用 Map 优化
+- 提供重构方案，等待确认
+
+```java
+// 检测到深嵌套
+for (User user : users) {
+    for (Order order : user.getOrders()) {
+        for (Item item : order.getItems()) {  // 第 3 层
+            // ...
+        }
+    }
+}
+
+// 建议重构为
+for (User user : users) {
+    for (Order order : user.getOrders()) {
+        processOrderItems(order);  // 抽取方法
+    }
+}
+```
+
+### 条件表达式拆分
+- 检测到 if 条件超过 3 个条件
+- 建议提取为局部布尔变量
+- 提供重构方案，等待确认
+
+```java
+// 检测到复杂条件
+if (user != null && user.isActive() && user.getAge() > 18 && user.hasPermission()) {
+    // ...
+}
+
+// 建议重构为
+boolean isValidUser = user != null && user.isActive();
+boolean isAdultWithPermission = user.getAge() > 18 && user.hasPermission();
+if (isValidUser && isAdultWithPermission) {
+    // ...
+}
+```
+
+### 循环内查询优化
+- 检测到循环内 SQL/数据库查询
+- 建议批量查询后转 Map
+- 提供重构方案，等待确认
+
+```java
+// 检测到 N+1 问题
+for (Long userId : userIds) {
+    User user = userRepository.findById(userId);
+    // ...
+}
+
+// 建议重构为
+List<User> users = userRepository.findByIdIn(userIds);
+Map<Long, User> userMap = users.stream()
+    .collect(Collectors.toMap(User::getId, Function.identity()));
+for (Long userId : userIds) {
+    User user = userMap.get(userId);
+    // ...
+}
+```
+
 ### 新增构造函数 (Go)
 ```go
 // 检测到直接赋值

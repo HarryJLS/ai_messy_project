@@ -447,6 +447,157 @@ grep -rE "style=\{" --include="*.tsx" | grep "className"
 
 ---
 
+## Category: 控制流
+
+### if/三元嵌套禁止超过 3 层
+
+**搜索技术**:
+- 检查嵌套深度超过 3 层的条件语句或三元表达式
+- 检查 JSX 中嵌套的条件渲染
+
+**通过标准**: 条件嵌套不超过 3 层
+**严重级别**: Medium
+**建议**: 使用提前 return 或抽取子组件优化嵌套深度
+
+```tsx
+// 不推荐：嵌套超过 3 层
+const Component = ({ data }) => {
+  if (data) {
+    if (data.valid) {
+      if (data.ready) {
+        if (data.complete) {  // 第 4 层，违规
+          return <Result data={data} />;
+        }
+      }
+    }
+  }
+  return null;
+};
+
+// 推荐：提前 return 减少嵌套
+const Component = ({ data }) => {
+  if (!data) return null;
+  if (!data.valid) return null;
+  if (!data.ready) return null;
+  if (!data.complete) return null;
+
+  return <Result data={data} />;
+};
+```
+
+---
+
+### 循环嵌套禁止超过 2 层
+
+**搜索技术**:
+- 检查嵌套深度超过 2 层的 map/forEach/for 循环
+- 使用缩进分析
+
+**通过标准**: 循环嵌套不超过 2 层
+**严重级别**: Medium
+**建议**: 通过抽取组件或使用 Map/Object 优化搜索
+
+```tsx
+// 不推荐：嵌套超过 2 层
+{users.map(user => (
+  user.orders.map(order => (
+    order.items.map(item => (  // 第 3 层，违规
+      <Item key={item.id} item={item} />
+    ))
+  ))
+))}
+
+// 推荐方案1：抽取组件
+const OrderItems = ({ order }) => (
+  <>
+    {order.items.map(item => (
+      <Item key={item.id} item={item} />
+    ))}
+  </>
+);
+
+{users.map(user => (
+  user.orders.map(order => (
+    <OrderItems key={order.id} order={order} />
+  ))
+))}
+
+// 推荐方案2：扁平化数据结构
+const itemMap = new Map(items.map(item => [item.id, item]));
+{orderItemIds.map(itemId => {
+  const item = itemMap.get(itemId);  // O(1) 查找
+  return <Item key={itemId} item={item} />;
+})}
+```
+
+---
+
+### 条件表达式过长
+
+**搜索模式**:
+```bash
+# 搜索条件中包含超过 3 个 && 或 || 的语句
+grep -rE "if\s*\([^)]*(\&\&|\|\|)[^)]*(\&\&|\|\|)[^)]*(\&\&|\|\|)" --include="*.tsx" --include="*.ts"
+grep -rE "\?[^:]*(\&\&|\|\|)[^:]*(\&\&|\|\|)[^:]*(\&\&|\|\|)" --include="*.tsx"
+```
+
+**通过标准**: 条件表达式中的条件数不超过 3 个
+**严重级别**: Medium
+**建议**: 将复杂条件提取为局部布尔变量或自定义 hook，提高可读性
+
+```tsx
+// 不推荐：条件表达式过长
+{user && user.isActive && user.age > 18 && user.hasPermission && (
+  <AdminPanel />
+)}
+
+// 推荐：提取局部布尔变量
+const isValidUser = user && user.isActive;
+const isAdultWithPermission = user?.age > 18 && user?.hasPermission;
+const canAccessAdmin = isValidUser && isAdultWithPermission;
+
+{canAccessAdmin && <AdminPanel />}
+
+// 或者使用自定义 hook
+const canAccessAdmin = useAdminAccess(user);
+{canAccessAdmin && <AdminPanel />}
+```
+
+---
+
+### 循环内 API 调用
+
+**搜索模式**:
+```bash
+# 搜索循环内的 API 调用
+grep -rE "\.map\(|\.forEach\(" --include="*.tsx" -A 5 | grep -E "fetch\(|axios\.|useQuery\(|useMutation\("
+```
+
+**通过标准**: 禁止在循环/map 内直接发起 API 调用
+**严重级别**: High
+**建议**: 使用批量查询或 Promise.all，配合 React Query 的批量数据获取
+
+```tsx
+// 不推荐：循环内 API 调用
+{userIds.map(userId => {
+  const { data } = useQuery(['user', userId], () => fetchUser(userId));  // N 次请求
+  return <UserCard key={userId} user={data} />;
+})}
+
+// 推荐：批量查询
+const { data: users } = useQuery(
+  ['users', userIds],
+  () => fetchUsers(userIds)  // 一次请求
+);
+const userMap = new Map(users?.map(u => [u.id, u]) ?? []);
+
+{userIds.map(userId => (
+  <UserCard key={userId} user={userMap.get(userId)} />
+))}
+```
+
+---
+
 ### Missing useCallback for Prop Functions
 
 **Search patterns**:

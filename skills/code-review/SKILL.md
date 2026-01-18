@@ -310,6 +310,56 @@ These checks apply to ALL changed code regardless of domain.
 
 ---
 
+## Category: 控制流 (Control Flow)
+
+### if 嵌套禁止超过 3 层
+
+**检查 diff 中**:
+- 嵌套深度超过 3 层的 if/条件语句
+- 可以通过提前 return 优化的深嵌套代码
+
+**通过标准**: if 嵌套不超过 3 层
+**严重级别**: Medium
+**建议**: 使用提前 return 减少嵌套深度
+
+---
+
+### for 嵌套禁止超过 2 层
+
+**检查 diff 中**:
+- 嵌套深度超过 2 层的 for/循环语句
+- 可以通过抽取方法或使用 Map 优化的循环
+
+**通过标准**: for 循环嵌套不超过 2 层
+**严重级别**: Medium
+**建议**: 抽取内层循环为独立方法，或使用 Map/字典优化搜索
+
+---
+
+### 条件表达式过长
+
+**检查 diff 中**:
+- 包含超过 3 个 `&&` 或 `||` 的条件表达式
+- 难以阅读理解的复杂条件判断
+
+**通过标准**: if 条件表达式中的条件数不超过 3 个
+**严重级别**: Medium
+**建议**: 将复杂条件提取为命名良好的局部布尔变量
+
+---
+
+### 循环内数据查询 (N+1 问题)
+
+**检查 diff 中**:
+- 在 for/while/map 循环内执行数据库查询
+- 在循环内发起 API 请求
+
+**通过标准**: 禁止在循环内执行数据库查询或 API 调用
+**严重级别**: High
+**建议**: 批量查询后转为 Map/字典进行 O(1) 查找
+
+---
+
 ## Domain-Specific Review Items
 
 Based on detected domains, read and apply the appropriate checklists:

@@ -378,6 +378,149 @@ grep -rE "HTTPException\(" --include="*.py" | grep -v "detail={"
 
 ## Category: Database/ORM
 
+### N+1 Query Patterns
+
+**Search technique**:
+- Look for loops that execute queries
+- Check for missing eager loading
+
+**Search patterns**:
+```bash
+# Queries inside loops
+grep -rE "for\s+\w+\s+in" --include="*.py" -A 5 | grep -E "\.query\(|\.filter\(|\.get\("
+```
+
+**Pass criteria**: No queries inside loops; use eager loading
+**Severity**: High
+
+---
+
+## Category: 控制流
+
+### if 嵌套禁止超过 3 层
+
+**搜索技术**:
+- 检查嵌套深度超过 3 层的 if 语句
+- 使用缩进分析
+
+**通过标准**: if 嵌套不超过 3 层
+**严重级别**: Medium
+**建议**: 使用提前 return 优化嵌套深度
+
+```python
+# 不推荐：嵌套超过 3 层
+def process(data):
+    if data is not None:
+        if data.valid:
+            if data.ready:
+                if data.complete:  # 第 4 层，违规
+                    # ...
+    return None
+
+# 推荐：提前 return 减少嵌套
+def process(data):
+    if data is None:
+        return None
+    if not data.valid:
+        return None
+    if not data.ready:
+        return None
+    if data.complete:
+        # ...
+    return result
+```
+
+---
+
+### for 嵌套禁止超过 2 层
+
+**搜索技术**:
+- 检查嵌套深度超过 2 层的 for 循环
+- 使用缩进分析
+
+**通过标准**: for 循环嵌套不超过 2 层
+**严重级别**: Medium
+**建议**: 通过抽取方法或使用字典优化搜索
+
+```python
+# 不推荐：嵌套超过 2 层
+for user in users:
+    for order in user.orders:
+        for item in order.items:  # 第 3 层，违规
+            # ...
+
+# 推荐方案1：抽取方法
+def process_order_items(order):
+    for item in order.items:
+        # ...
+
+for user in users:
+    for order in user.orders:
+        process_order_items(order)
+
+# 推荐方案2：使用字典优化搜索
+item_map = {item.id: item for item in items}
+for order in orders:
+    item = item_map.get(order.item_id)  # O(1) 查找
+    # ...
+```
+
+---
+
+### 条件表达式过长
+
+**搜索模式**:
+```bash
+# 搜索 if 条件中包含超过 3 个 and 或 or 的语句
+grep -rE "if\s+.*\s+(and|or)\s+.*\s+(and|or)\s+.*\s+(and|or)" --include="*.py"
+```
+
+**通过标准**: if 条件表达式中的条件数不超过 3 个
+**严重级别**: Medium
+**建议**: 将复杂条件提取为局部布尔变量，提高可读性
+
+```python
+# 不推荐：条件表达式过长
+if user is not None and user.is_active and user.age > 18 and user.has_permission:
+    # ...
+
+# 推荐：提取局部布尔变量
+is_valid_user = user is not None and user.is_active
+is_adult_with_permission = user.age > 18 and user.has_permission
+if is_valid_user and is_adult_with_permission:
+    # ...
+```
+
+---
+
+### 循环内数据库查询 (N+1 问题)
+
+**搜索模式**:
+```bash
+# 搜索 for 循环内的数据库查询调用
+grep -rE "for\s+\w+\s+in" --include="*.py" -A 5 | grep -E "\.query\(|\.filter\(|\.get\(|await.*find"
+```
+
+**通过标准**: 禁止在循环内执行数据库查询
+**严重级别**: High
+**建议**: 批量查询后转为字典进行处理
+
+```python
+# 不推荐：循环内查询（N+1 问题）
+for user_id in user_ids:
+    user = await user_repo.find_by_id(user_id)  # 每次循环都查询数据库
+    # ...
+
+# 推荐：批量查询 + 字典
+users = await user_repo.find_by_ids(user_ids)  # 一次查询
+user_map = {user.id: user for user in users}
+for user_id in user_ids:
+    user = user_map.get(user_id)  # 内存查找 O(1)
+    # ...
+```
+
+---
+
 ### Missing Session Management
 
 **Search patterns**:

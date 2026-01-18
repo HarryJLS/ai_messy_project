@@ -124,6 +124,7 @@ REPORT="${REPORT_DIR}/code-review-$(date +%Y%m%d-%H%M%S).md"
 | 代码质量 | 调试语句、TODO注释、空catch块 |
 | LLM异味 | 占位实现、过度抽象 |
 | 简化 | 重复逻辑、不必要复杂度 |
+| 控制流 | if嵌套≤3层、for嵌套≤2层、条件表达式≤3个、循环内禁止查询 |
 
 #### 4.2 语言特定检查
 
@@ -134,6 +135,7 @@ REPORT="${REPORT_DIR}/code-review-$(date +%Y%m%d-%H%M%S).md"
 - 并发处理：禁Executors、线程命名
 - 异常日志：空catch、SLF4J门面
 - 安全规约：SQL注入、XSS防护
+- 控制流：if嵌套≤3层、for嵌套≤2层、条件表达式≤3个、禁止循环内SQL查询
 
 **Go（字节跳动规范）**：
 - 代码格式：函数≤50行、单行≤120字符、gofmt
@@ -141,6 +143,7 @@ REPORT="${REPORT_DIR}/code-review-$(date +%Y%m%d-%H%M%S).md"
 - 错误处理：必须处理、%w包装
 - 并发安全：race检测、goroutine泄漏、锁释放
 - 性能优化：slice/map预分配、strings.Builder
+- 控制流：if嵌套≤3层、for嵌套≤2层、条件表达式≤3个、禁止循环内DB查询
 
 **每个检查项执行**：
 1. 在 diff 中搜索匹配模式

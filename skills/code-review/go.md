@@ -400,6 +400,158 @@ grep -rE "map\[.*\]bool" --include="*.go"
 
 ## Category: 控制流
 
+### if 嵌套禁止超过 3 层
+
+**搜索技术**:
+- 检查嵌套深度超过 3 层的 if 语句
+- 使用缩进分析或 AST 工具
+
+**通过标准**: if 嵌套不超过 3 层
+**严重级别**: Medium
+**建议**: 使用提前 return 优化嵌套深度
+
+```go
+// 不推荐：嵌套超过 3 层
+func process(data *Data) error {
+    if data != nil {
+        if data.Valid {
+            if data.Ready {
+                if data.Complete {  // 第 4 层，违规
+                    // ...
+                }
+            }
+        }
+    }
+    return nil
+}
+
+// 推荐：提前 return 减少嵌套
+func process(data *Data) error {
+    if data == nil {
+        return errors.New("data is nil")
+    }
+    if !data.Valid {
+        return errors.New("data is invalid")
+    }
+    if !data.Ready {
+        return errors.New("data is not ready")
+    }
+    if data.Complete {
+        // ...
+    }
+    return nil
+}
+```
+
+---
+
+### for 嵌套禁止超过 2 层
+
+**搜索技术**:
+- 检查嵌套深度超过 2 层的 for 循环
+- 使用缩进分析或 AST 工具
+
+**通过标准**: for 循环嵌套不超过 2 层
+**严重级别**: Medium
+**建议**: 通过抽取方法或使用 map 优化搜索
+
+```go
+// 不推荐：嵌套超过 2 层
+for _, user := range users {
+    for _, order := range user.Orders {
+        for _, item := range order.Items {  // 第 3 层，违规
+            // ...
+        }
+    }
+}
+
+// 推荐方案1：抽取方法
+for _, user := range users {
+    for _, order := range user.Orders {
+        processOrderItems(order)  // 抽取内层循环
+    }
+}
+
+// 推荐方案2：使用 map 优化搜索
+itemMap := make(map[int64]*Item, len(items))
+for _, item := range items {
+    itemMap[item.ID] = item
+}
+for _, order := range orders {
+    item := itemMap[order.ItemID]  // O(1) 查找
+    // ...
+}
+```
+
+---
+
+### 条件表达式过长
+
+**搜索模式**:
+```bash
+# 搜索 if 条件中包含超过 3 个 && 或 || 的语句
+grep -rE "if\s+[^{]*(\&\&|\|\|)[^{]*(\&\&|\|\|)[^{]*(\&\&|\|\|)" --include="*.go"
+```
+
+**通过标准**: if 条件表达式中的条件数不超过 3 个
+**严重级别**: Medium
+**建议**: 将复杂条件提取为局部布尔变量，提高可读性
+
+```go
+// 不推荐：条件表达式过长
+if user != nil && user.Active && user.Age > 18 && user.HasPermission {
+    // ...
+}
+
+// 推荐：提取局部布尔变量
+isValidUser := user != nil && user.Active
+isAdultWithPermission := user.Age > 18 && user.HasPermission
+if isValidUser && isAdultWithPermission {
+    // ...
+}
+```
+
+---
+
+### 循环内数据库查询 (N+1 问题)
+
+**搜索模式**:
+```bash
+# 搜索 for 循环内的数据库查询调用
+grep -rE "for\s+.*range" --include="*.go" -A 10 | grep -E "\.(Find|Query|Get|First|Select|Where).*\("
+```
+
+**通过标准**: 禁止在循环内执行数据库查询
+**严重级别**: High
+**建议**: 批量查询后转为 map 进行处理
+
+```go
+// 不推荐：循环内查询（N+1 问题）
+for _, userID := range userIDs {
+    user, err := repo.FindByID(ctx, userID)  // 每次循环都查询数据库
+    if err != nil {
+        return err
+    }
+    // ...
+}
+
+// 推荐：批量查询 + map
+users, err := repo.FindByIDs(ctx, userIDs)  // 一次查询
+if err != nil {
+    return err
+}
+userMap := make(map[int64]*User, len(users))
+for _, user := range users {
+    userMap[user.ID] = user
+}
+for _, userID := range userIDs {
+    user := userMap[userID]  // 内存查找 O(1)
+    // ...
+}
+```
+
+---
+
 ### 减少嵌套
 
 **搜索技术**:
