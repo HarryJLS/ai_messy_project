@@ -6,14 +6,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a collection of AI agent workflows and development guides (primarily in Chinese). It contains:
 
-- **Agent Harness Workflow** (`workflow/agent.md`) - A structured TDD-based development workflow with task management
+- **Agent Workflow** (`workflow/plan-*.md`) - A structured TDD-based development workflow with task management
+- **Code Review** (`workflow/code-review.md`) - Diff-based code review with language-specific checklists
+- **Code Fixer** (`workflow/code-fixer.md`) - Auto-fix code style issues (small fixes auto, big changes need confirmation)
 - **WorkTeam Workflow** (`common/workTeam.md`) - A role-based product development pipeline
-- **Skills** (`skills/`) - Claude Code skills for the Agent Harness workflow
+- **Skills** (`skills/`) - Claude Code skills for the Agent workflow
 - **Testing Guides** (`common/`) - Spock testing guides for Java/Groovy and Go
 
-## Agent Harness Workflow
+## Agent Workflow
 
-The primary workflow for structured development using TDD. Core commands:
+The primary workflow for structured development using TDD.
+
+**Workflow files:**
+- `workflow/plan-init.md` - Initialize project
+- `workflow/plan-next.md` - Execute tasks (TDD cycle)
+- `workflow/plan-log.md` - Manual logging
+- `workflow/plan-archive.md` - Archive completed work
+
+**Core commands:**
 
 | Command | Purpose |
 |---------|---------|
@@ -21,6 +31,19 @@ The primary workflow for structured development using TDD. Core commands:
 | `/plan-next` | Execute next pending task using TDD cycle (RED → GREEN → COMMIT) |
 | `/plan-log` | Manually log non-task progress (architecture decisions, urgent fixes) |
 | `/plan-archive` | Archive completed work to `archives/YYYY-MM-DD-HHMMSS/` |
+
+## Code Review & Fixer
+
+| Command | Purpose |
+|---------|---------|
+| `/code-review` | Review code changes, generate review report |
+| `/code-fixer` | Auto-fix code style issues (preserves variable names) |
+
+**Supported standards:**
+- Java: 阿里巴巴 Java 开发规范
+- Go: 字节跳动 Go 开发规范
+- Frontend: React/TypeScript best practices
+- Backend: Python/FastAPI best practices
 
 ### Key Files
 - `features.json` - Single source of truth for tasks (array of task objects with `passes: boolean`)

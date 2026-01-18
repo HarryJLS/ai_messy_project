@@ -6,7 +6,7 @@ Claude Code Skills 和 Workflow 工具集，提供结构化的 TDD 开发工作�
 
 本项目是一个 **Claude Code 增强工具集**，包含：
 
-- **Agent Harness 工作流**：基于 TDD 的结构化开发流程，支持任务管理、日志隔离、上下文恢复
+- **Agent 工作流**：基于 TDD 的结构化开发流程，支持任务管理、日志隔离、上下文恢复
 - **Unit Test 工作流**：自动检测项目语言，生成符合最佳实践的单元测试
 - **WorkTeam 工作流**：5 人角色分工的产品开发流水线
 
@@ -30,7 +30,7 @@ ai_messy_project/
 
 ```
 skills/
-├── plan-init/              # 初始化 Agent Harness 框架
+├── plan-init/              # 初始化 Agent 框架
 │   └── SKILL.md
 ├── plan-next/              # 执行下一个待处理任务 (TDD 循环)
 │   └── SKILL.md
@@ -38,6 +38,12 @@ skills/
 │   └── SKILL.md
 ├── plan-archive/           # 归档已完成的工作
 │   └── SKILL.md
+├── code-review/            # 代码审查
+│   ├── SKILL.md
+│   └── *.md                # 语言特定检查清单
+├── code-fixer/             # 代码自动修复
+│   ├── SKILL.md
+│   └── references/         # 语言特定修复规则
 ├── unit-test/              # 单元测试生成
 │   ├── SKILL.md
 │   └── references/         # 测试参考文档
@@ -48,7 +54,7 @@ skills/
 └── *.skill                 # 打包后的技能文件 (ZIP 格式)
 ```
 
-### Agent Harness 命令
+### Agent 命令
 
 | 命令 | 用途 |
 |------|------|
@@ -56,6 +62,13 @@ skills/
 | `/plan-next` | 执行下一个任务，遵循 TDD 循环 (RED → GREEN → COMMIT) |
 | `/plan-log` | 手动记录架构决策、紧急修复等非任务进度 |
 | `/plan-archive` | 归档已完成工作到 `archives/YYYY-MM-DD-HHMMSS/` |
+
+### Code Review & Fixer 命令
+
+| 命令 | 用途 |
+|------|------|
+| `/code-review` | 审查代码变更，生成审查报告 |
+| `/code-fixer` | 自动修复代码规范问题 |
 
 ### Unit Test 命令
 
@@ -78,11 +91,17 @@ skills/
 
 ```
 workflow/
-├── agent.md                # Agent Harness 完整工作流文档
-└── unit-test.md            # 单元测试工作流文档
+├── plan-init.md            # 初始化工作流
+├── plan-next.md            # 任务执行工作流 (TDD 循环)
+├── plan-log.md             # 手动日志工作流
+├── plan-archive.md         # 归档工作流
+├── code-review.md          # 代码审查工作流
+├── code-fixer.md           # 代码自动修复工作流
+├── unit-test.md            # 单元测试工作流
+└── agent.md                # Agent 完整工作流文档 (汇总)
 ```
 
-### agent.md - Agent Harness 工作流
+### Agent 工作流 (plan-*.md)
 
 结构化的 TDD 开发工作流，核心特性：
 
@@ -96,17 +115,27 @@ workflow/
 READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 ```
 
+### code-review.md - 代码审查工作流
+
+基于 diff 的代码审查，自动检测语言并应用对应规范：
+- **Java**：阿里巴巴 Java 开发规范
+- **Go**：字节跳动 Go 开发规范
+- **Frontend**：React/TypeScript 最佳实践
+- **Backend**：Python/FastAPI 最佳实践
+
+### code-fixer.md - 代码自动修复工作流
+
+自动修复代码规范问题：
+- **AUTO**：小问题自动修复（格式、注解、defer Close）
+- **CONFIRM**：大改动需确认（方法拆分、新增构造函数）
+- **SKIP**：禁止修改用户定义的变量名
+
 ### unit-test.md - 单元测试工作流
 
 自动检测项目类型，生成符合最佳实践的单元测试：
 
 - **Go**：Table-Driven Tests + Mockey + Testify
 - **Java**：Spock (BDD) 或 JUnit 5 + Mockito + AssertJ
-
-**Java 版本兼容：**
-- 编译版本决定依赖版本（非运行时）
-- Java 8 编译 → Spock 2.3 + Groovy 3.x
-- Java 17+ 编译 → Spock 2.4 + Groovy 4.x
 
 ---
 
@@ -154,7 +183,7 @@ Go 项目的单元测试指南（字节跳动风格）：
 
 ## 快速开始
 
-### 1. 使用 Agent Harness 开发
+### 1. 使用 Agent 开发
 
 ```bash
 # 1. 初始化项目

@@ -1,4 +1,4 @@
-# Agent Harness - Antigravity 工作流
+# Agent - Antigravity 工作流
 
 将 Claude Code 插件转换为 Antigravity 独立 Agent 工作流，保持相同的使用体验。
 
@@ -25,7 +25,7 @@
 
 **指令**: `/plan-init`
 
-**描述**: 初始化 Agent Harness 框架，创建状态文件
+**描述**: 初始化 Agent 框架，创建状态文件
 
 ⚠️ **角色提醒**：整个初始化过程中，始终以**资深开发**的视角思考问题。根据项目技术栈（Go/Java/Python/前端）考虑：架构设计、代码复用、模块边界、异常处理、性能影响等。
 
@@ -56,7 +56,7 @@
 
 3. **创建 `logs/init.log`** 并写入头部:
 ```
-=== Agent Harness 初始化日志 ===
+=== Agent 初始化日志 ===
 初始化时间: [时间戳]
 格式: 增强结构化格式（多段落日志）
 
@@ -75,8 +75,8 @@
 
 4. **追加初始日志条目到 `logs/init.log`**:
 ```
-[ISO 时间戳] [Init] Agent Harness 框架设置
-├─ Context: 用户初始化 Agent Harness 进行结构化开发工作流
+[ISO 时间戳] [Init] Agent 框架设置
+├─ Context: 用户初始化 Agent 进行结构化开发工作流
 ├─ Files: features.json（已创建）| logs/（目录已创建）| logs/init.log（本文件）
 ├─ Changes: 设置任务隔离日志架构
 ├─ Tech: JSON 用于任务存储 | 独立日志文件提升 token 效率
@@ -270,10 +270,15 @@
 ⚠️ **必须先看到测试失败，再写业务代码**
 
 1. 根据任务 `test` 字段选择验证方式：
-   - `unit/integration/e2e` → 写自动化测试
+   - `unit/integration/e2e` → **调用 `/unit-test` 工作流**
    - `manual` → 写验证检查清单
 
-2. 运行测试，**确认失败**
+2. **调用 `/unit-test` 工作流**（非 manual 类型时）：
+   - `/unit-test` 会自动检测项目语言（Go/Java）
+   - 根据项目现有测试风格生成测试代码
+   - 完成后自动返回，继续 `plan-next` 后续阶段
+
+3. 运行测试，**确认失败**
 
 **日志**:
 ```
@@ -281,6 +286,7 @@
 ├─ 状态: red → implementing
 ├─ 决策: 选择 XXX 测试方式，因为 YYY
 ├─ 文件: test.spec.ts（已创建）
+├─ 测试框架: [Go: Mockey+Testify | Java: Spock/JUnit]（由 /unit-test 检测）
 ├─ 问题: none
 └─ 下一步: 实现功能代码，让测试通过
 ---

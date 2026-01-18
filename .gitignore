@@ -42,7 +42,7 @@ Desktop.ini
 .claude/
 
 # =========================
-# Agent Harness 工作流产物
+# Agent 工作流产物
 # =========================
 # 任务状态文件 (每次初始化生成)
 features.json
