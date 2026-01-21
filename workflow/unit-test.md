@@ -54,6 +54,28 @@
 
 ⛔ **门控**: 等待用户提供测试目标
 
+#### 步骤 3: 检测现有测试文件
+
+**根据源文件路径，确定对应的测试文件位置：**
+
+| 语言 | 源文件 | 测试文件 |
+|------|--------|----------|
+| Go | `foo/bar.go` | `foo/bar_test.go` |
+| Java (JUnit) | `src/main/java/.../Service.java` | `src/test/java/.../ServiceTest.java` |
+| Java (Spock) | `src/main/java/.../Service.java` | `src/test/groovy/.../ServiceSpec.groovy` |
+
+**检测逻辑：**
+
+```
+检查测试文件是否存在?
+├─ 存在 → 读取现有测试文件，在其基础上追加新测试方法
+│         注意：保持现有测试风格和结构
+│
+└─ 不存在 → 创建新测试文件
+```
+
+> **重要**: 如果测试文件已存在，必须先读取其内容，在现有方法列表末尾追加新的测试方法，而非覆盖创建新文件。
+
 ---
 
 ## 工作流 2: Go 项目测试
@@ -87,21 +109,21 @@ func Test_MethodName(t *testing.T) {
 
     // 3. 定义测试用例表格 (对应 Spock 的 where 块)
     tests := []struct {
-        name    string
+        name    string  // 测试场景描述（使用中文）
         args    args
         mocks   mocks
         want    interface{}
         wantErr bool
     }{
         {
-            name: "Success_Normal",
+            name: "正常流程_成功返回",  // 描述测试场景
             args: args{...},
             mocks: mocks{...},
             want: expected,
             wantErr: false,
         },
         {
-            name: "Fail_InvalidInput",
+            name: "异常流程_无效输入",  // 描述预期失败场景
             args: args{...},
             mocks: mocks{...},
             want: nil,
@@ -112,20 +134,20 @@ func Test_MethodName(t *testing.T) {
     // 4. 执行循环
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            // Given: 设置 Mock
+            // Given: 准备测试数据和 Mock
             mockey.Mock(dependency.Method).To(func(...) ... {
                 return tt.mocks.value
             }).Build()
 
-            // When: 调用被测函数
+            // When: 执行被测方法
             got, err := TargetFunc(tt.args.input)
 
-            // Then: 断言结果
+            // Then: 验证返回结果
             if tt.wantErr {
-                assert.Error(t, err)
+                assert.Error(t, err)  // 验证返回错误
             } else {
-                assert.NoError(t, err)
-                assert.Equal(t, tt.want, got)
+                assert.NoError(t, err)  // 验证无错误
+                assert.Equal(t, tt.want, got)  // 验证返回值匹配
             }
         })
     }

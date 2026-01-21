@@ -126,6 +126,28 @@ FROM openjdk:8-jdk-alpine
 
 Read `references/java-dependencies.md` for full configuration.
 
+### Step 3b: 检测现有测试文件
+
+**根据源文件路径，确定对应的测试文件位置：**
+
+| 语言 | 源文件 | 测试文件 |
+|------|--------|----------|
+| Go | `foo/bar.go` | `foo/bar_test.go` |
+| Java (JUnit) | `src/main/java/.../Service.java` | `src/test/java/.../ServiceTest.java` |
+| Java (Spock) | `src/main/java/.../Service.java` | `src/test/groovy/.../ServiceSpec.groovy` |
+
+**检测逻辑：**
+
+```
+检查测试文件是否存在?
+├─ 存在 → 读取现有测试文件，在其基础上追加新测试方法
+│         注意：保持现有测试风格和结构
+│
+└─ 不存在 → 创建新测试文件
+```
+
+> **重要**: 如果测试文件已存在，必须先读取其内容，在现有方法列表末尾追加新的测试方法，而非覆盖创建新文件。
+
 ### Step 4: Scan Existing Tests
 
 Before generating tests, scan for existing test patterns:
@@ -160,26 +182,33 @@ src/test/
 
 ```go
 func Test_MethodName(t *testing.T) {
-    defer mockey.OffAll()  // Always clean up mocks
+    defer mockey.OffAll()  // 清理所有 Mock
 
-    type args struct { /* inputs */ }
-    type mocks struct { /* mock behaviors */ }
+    type args struct { /* 输入参数 */ }
+    type mocks struct { /* Mock 行为控制 */ }
 
     tests := []struct {
-        name    string
+        name    string  // 测试场景描述（使用中文）
         args    args
         mocks   mocks
         want    interface{}
         wantErr bool
     }{
-        // Test cases here
+        {
+            name: "正常流程_成功返回",  // 描述测试场景
+            // ...
+        },
+        {
+            name: "异常流程_无效输入",  // 描述预期失败场景
+            // ...
+        },
     }
 
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            // Given: Set up mocks
-            // When: Call function
-            // Then: Assert results
+            // Given: 准备测试数据和 Mock
+            // When: 执行被测方法
+            // Then: 验证返回结果
         })
     }
 }
@@ -188,19 +217,19 @@ func Test_MethodName(t *testing.T) {
 ### Java Spock Specific
 
 ```groovy
-def "测试方法描述"() {
-    given: "准备测试数据"
+def "测试正常流程_用户成功下单"() {
+    given: "准备测试数据 - 创建有效的订单请求"
     def input = new InputDTO(...)
 
-    and: "模拟依赖行为"
+    and: "模拟依赖行为 - 库存服务返回充足库存"
     mockService.method(_) >> expectedValue
 
-    when: "调用被测方法"
+    when: "执行被测方法 - 调用下单接口"
     def result = target.method(input)
 
-    then: "验证结果"
+    then: "验证结果 - 订单创建成功"
     result == expected
-    1 * mockService.save(_)  // Verify invocation
+    1 * mockService.save(_)  // 验证保存方法被调用 1 次
 }
 ```
 
@@ -208,18 +237,18 @@ def "测试方法描述"() {
 
 ```java
 @Test
-@DisplayName("测试描述")
-void testMethodDescription() {
-    // Given
+@DisplayName("测试正常流程_用户成功下单")
+void testNormalFlow_UserPlaceOrderSuccess() {
+    // Given: 准备测试数据
     var input = new InputDTO(...);
-    when(mockService.method(any())).thenReturn(expected);
+    when(mockService.method(any())).thenReturn(expected);  // 模拟依赖返回值
 
-    // When
+    // When: 执行被测方法
     var result = target.method(input);
 
-    // Then
-    assertThat(result).isEqualTo(expected);
-    verify(mockService, times(1)).save(any());
+    // Then: 验证结果
+    assertThat(result).isEqualTo(expected);  // 验证返回值
+    verify(mockService, times(1)).save(any());  // 验证保存方法被调用 1 次
 }
 ```
 
