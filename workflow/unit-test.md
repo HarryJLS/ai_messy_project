@@ -94,7 +94,10 @@
 
 使用 **Table-Driven Tests + Mockey + Testify** 风格：
 
+> **注意**: 生成测试时，注释中的路径和函数名需替换为实际值（如 `./pkg/service/...` 和 `Test_OrderService_CreateOrder`）
+
 ```go
+// 运行命令：go test -gcflags="all=-l -N" -v ./path/to/package/... -run Test_FunctionName
 func Test_MethodName(t *testing.T) {
     // 1. 全局清理 (Mockey 必须)
     defer mockey.OffAll()
