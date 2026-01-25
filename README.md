@@ -51,6 +51,8 @@ skills/
 │       ├── java-spock.md           # Spock 测试指南
 │       ├── java-junit.md           # JUnit 5 测试指南
 │       └── java-dependencies.md    # Java 依赖配置
+├── add_or_update_skill/    # Skill 管理工具
+│   └── SKILL.md
 └── *.skill                 # 打包后的技能文件 (ZIP 格式)
 ```
 
