@@ -1,13 +1,16 @@
 # AI Messy Project
 
-Claude Code Skills 和 Workflow 工具集，提供结构化的 TDD 开发工作流和多语言单元测试支持。
+Claude Code Skills 和 Workflow 工具集，提供结构化的 TDD 开发工作流、多语言单元测试支持和 UI/UX 设计智能。
 
 ## 项目概览
 
 本项目是一个 **Claude Code 增强工具集**，包含：
 
 - **Agent 工作流**：基于 TDD 的结构化开发流程，支持任务管理、日志隔离、上下文恢复
-- **Unit Test 工作流**：自动检测项目语言，生成符合最佳实践的单元测试
+- **代码质量工具**：Code Review、Code Fixer、Code Simplifier
+- **单元测试工具**：自动检测项目语言，生成符合最佳实践的单元测试
+- **UI/UX 设计智能**：50+ 风格、97+ 配色方案、57+ 字体搭配
+- **Skill 管理**：创建、打包、同步 Claude Code Skills
 - **WorkTeam 工作流**：5 人角色分工的产品开发流水线
 
 ## 目录结构
@@ -28,6 +31,24 @@ ai_messy_project/
 
 可安装到 Claude Code 的技能模块，通过 `/skill-name` 命令调用。
 
+### Skills 总览
+
+| 分类 | Skill | 命令 | 用途 |
+|------|-------|------|------|
+| **Agent 工作流** | plan-init | `/plan-init` | 初始化项目，创建 `features.json` 和 `logs/` |
+| | plan-next | `/plan-next` | 执行下一个任务 (TDD: RED → GREEN → COMMIT) |
+| | plan-log | `/plan-log` | 手动记录架构决策、紧急修复等 |
+| | plan-archive | `/plan-archive` | 归档已完成工作 |
+| **代码质量** | code-review | `/code-review` | 审查代码变更，生成审查报告 |
+| | code-fixer | `/code-fixer` | 自动修复代码规范问题 |
+| | code-simplifier | `/code-simplifier` | 简化优化代码，提升可维护性 |
+| **测试** | unit-test | `/unit-test` | 自动检测语言，生成单元测试 |
+| **设计** | ui-ux-pro-max | `/ui-ux-pro-max` | UI/UX 设计智能助手 |
+| **Skill 管理** | skill-creator | `/skill-creator` | 创建和打包 Claude Code Skill |
+| | add_or_update_skill | `/add_or_update_skill` | 同步 skill 到多个平台 |
+
+### 目录结构
+
 ```
 skills/
 ├── plan-init/              # 初始化 Agent 框架
@@ -40,108 +61,230 @@ skills/
 │   └── SKILL.md
 ├── code-review/            # 代码审查
 │   ├── SKILL.md
-│   └── *.md                # 语言特定检查清单
+│   ├── java.md             # 阿里巴巴 Java 规范检查清单
+│   ├── go.md               # 字节跳动 Go 规范检查清单
+│   ├── frontend.md         # React/TypeScript 检查清单
+│   └── backend.md          # Python/FastAPI 检查清单
 ├── code-fixer/             # 代码自动修复
 │   ├── SKILL.md
-│   └── references/         # 语言特定修复规则
+│   └── references/
+│       ├── java.md         # Java 修复规则
+│       ├── go.md           # Go 修复规则
+│       ├── frontend.md     # Frontend 修复规则
+│       └── backend.md      # Backend 修复规则
+├── code-simplifier/        # 代码简化优化
+│   └── SKILL.md
 ├── unit-test/              # 单元测试生成
 │   ├── SKILL.md
-│   └── references/         # 测试参考文档
+│   └── references/
 │       ├── go-mockey-testify.md    # Go 测试指南
 │       ├── java-spock.md           # Spock 测试指南
 │       ├── java-junit.md           # JUnit 5 测试指南
 │       └── java-dependencies.md    # Java 依赖配置
-├── code-simplifier/        # 代码简化优化
-│   └── SKILL.md
-├── skill-creator/          # Skill 创建指南
-│   └── SKILL.md
 ├── ui-ux-pro-max/          # UI/UX 设计智能
-│   └── SKILL.md
+│   ├── SKILL.md
+│   └── scripts/            # 设计系统搜索工具
+├── skill-creator/          # Skill 创建指南
+│   ├── SKILL.md
+│   └── references/
+│       ├── workflows.md    # 工作流设计模式
+│       └── output-patterns.md  # 输出模式
 ├── add_or_update_skill/    # Skill 管理工具
 │   └── SKILL.md
 └── *.skill                 # 打包后的技能文件 (ZIP 格式)
 ```
 
-### Agent 命令
+---
 
-| 命令 | 用途 |
-|------|------|
-| `/plan-init` | 初始化项目，创建 `features.json` 和 `logs/` 目录 |
-| `/plan-next` | 执行下一个任务，遵循 TDD 循环 (RED → GREEN → COMMIT) |
-| `/plan-log` | 手动记录架构决策、紧急修复等非任务进度 |
-| `/plan-archive` | 归档已完成工作到 `archives/YYYY-MM-DD-HHMMSS/` |
+## Skill 详细说明
 
-### Code Review & Fixer 命令
+### 1. Agent 工作流 (plan-*)
 
-| 命令 | 用途 |
-|------|------|
-| `/code-review` | 审查代码变更，生成审查报告 |
-| `/code-fixer` | 自动修复代码规范问题 |
+基于 TDD 的结构化开发工作流，核心特性：
 
-### Unit Test 命令
+- **抗遗忘**：通过任务日志恢复上下文
+- **抗范围蔓延**：JSON 定义范围，日志提供详情
+- **任务隔离**：每个任务独立日志文件 (`logs/task-{id}.log`)
+- **TDD 强制**：必须先 RED 再 GREEN
 
-| 命令 | 用途 |
-|------|------|
-| `/unit-test` | 自动检测语言，生成单元测试 |
+**执行流程：**
+```
+READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
+```
 
-**触发词：** "帮我写单元测试"、"写测试"、"添加单元测试"
+| 命令 | 触发词 | 说明 |
+|------|--------|------|
+| `/plan-init` | "初始化项目"、"开始新项目"、"创建任务列表" | 创建 `features.json` 和 `logs/` 目录，交互式定义任务 |
+| `/plan-next` | "执行下一个任务"、"继续任务"、"开始开发" | 执行七阶段 TDD 循环 |
+| `/plan-log` | "记录进度"、"写日志"、"记录决策" | 手动记录非任务进度 |
+| `/plan-archive` | "归档项目"、"清理工作区"、"备份任务" | 归档到 `archives/YYYY-MM-DD-HHMMSS/` |
 
-**支持的语言：**
+**核心文件：**
+- `features.json` - 任务的单一事实来源
+- `logs/init.log` - 初始化日志
+- `logs/task-{id}.log` - 每个任务独立日志
+
+---
+
+### 2. Code Review
+
+基于 diff 的代码审查，自动检测语言并应用对应规范。
+
+| 触发词 | 说明 |
+|--------|------|
+| `/code-review` | 审查代码变更 |
+
+**自动检测域：**
+
+| 文件模式 | 域 | 规范 |
+|----------|-----|------|
+| `*.java` | Java | 阿里巴巴 Java 开发规范 |
+| `*.go` | Go | 字节跳动 Go 开发规范 |
+| `*.tsx`, `*.jsx`, `designer/` | Frontend | React/TypeScript 最佳实践 |
+| `*.py`, `server/`, `rag/` | Backend | Python/FastAPI 最佳实践 |
+
+**审查类别：**
+- Security (Critical): 硬编码密钥、命令注入、eval 执行
+- Code Quality: console.log、TODO 注释、空 catch 块
+- LLM Code Smells: 占位实现、过度泛化抽象
+- Impact Analysis: 破坏性变更、API 签名修改
+- Simplification: 重复逻辑、不必要复杂度
+- 控制流: if 嵌套 >3 层、for 嵌套 >2 层、循环内查询 (N+1)
+
+---
+
+### 3. Code Fixer
+
+自动修复代码以符合编码规范。
+
+| 触发词 | 说明 |
+|--------|------|
+| `/code-fixer`、"修复代码"、"fix code"、"规范化代码" | 自动修复 |
+
+**修复分类：**
+
+| 类型 | AUTO (自动修复) | CONFIRM (需确认) | SKIP (禁止) |
+|------|----------------|-----------------|-------------|
+| 格式 | 换行、缩进、空格 | - | - |
+| 重构 | 冗余 else、early return | 方法拆分、if 嵌套优化 | - |
+| 缺失 | @Override、defer Close | 新增构造函数 | - |
+| 命名 | - | - | 变量名、函数名 |
+
+**重要原则：** 绝对禁止修改用户定义的变量名、函数名、类名。
+
+---
+
+### 4. Code Simplifier
+
+简化和优化代码，提升清晰度、一致性和可维护性。
+
+| 触发词 | 说明 |
+|--------|------|
+| `/code-simplifier`、"简化代码"、"优化代码"、"重构代码"、"清理代码" | 代码简化 |
+
+**支持语言：** Go、Java、Python
+
+**核心原则：**
+1. 保持功能不变
+2. 提升清晰度（选择清晰而非简短）
+3. 避免过度简化
+4. 聚焦范围（默认只优化最近修改的代码）
+
+---
+
+### 5. Unit Test
+
+自动检测项目语言，生成符合最佳实践的单元测试。
+
+| 触发词 | 说明 |
+|--------|------|
+| `/unit-test`、"帮我写单元测试"、"写测试"、"添加单元测试" | 生成单元测试 |
+
+**支持的语言和框架：**
 
 | 语言 | 检测文件 | 测试框架 | 风格 |
 |------|---------|---------|------|
 | Go | `go.mod` | Mockey + Testify | Table-Driven Tests |
 | Java | `pom.xml` / `build.gradle` | Spock 或 JUnit 5 | BDD / Given-When-Then |
 
-**设计原则：**
-- **自动检测**：根据项目文件自动选择测试框架
-- **风格统一**：匹配项目现有测试风格
-- **编译版本优先**：Java 依赖版本由编译版本决定，而非运行时
+**Java Spock 版本选择：**
 
-### Code Simplifier 命令
+| 编译版本 | Spock 版本 | Groovy GroupId |
+|---------|-----------|----------------|
+| Java 8/11 | `2.3-groovy-3.0` | `org.codehaus.groovy` |
+| Java 17+ | `2.4-M4-groovy-4.0` | `org.apache.groovy` |
 
-| 命令 | 用途 |
-|------|------|
-| `/code-simplifier` | 简化和优化代码，提升清晰度和可维护性 |
+**Go 测试命令：**
+```bash
+go test -gcflags="all=-l -N" -v ./...
+```
 
-**支持的语言：** Go、Java、Python
+---
 
-**触发词：** "简化代码"、"优化代码"、"重构代码"、"清理代码"
+### 6. UI/UX Pro Max
 
-### UI/UX Design Intelligence
+UI/UX 设计智能助手，提供全面的设计指南。
 
-| 命令 | 用途 |
-|------|------|
-| `/ui-ux-pro-max` | UI/UX 设计智能助手 (设计系统、配色、排版、可访问性检查) |
+| 触发词 | 说明 |
+|--------|------|
+| `/ui-ux-pro-max`、"设计 UI"、"Review UX"、"生成配色"、"创建着陆页" | 设计智能 |
 
-**功能：**
-提供 50+ 风格、97+ 配色方案、57+ 字体搭配的全面设计指南。支持从 "分析需求" 到 "生成 Design System" 再到 "具体实现" 的全流程。
+**功能特性：**
+- 50+ UI 风格（glassmorphism、minimalism、brutalism 等）
+- 97+ 配色方案（按产品类型分类）
+- 57+ 字体搭配（Google Fonts）
+- 99+ UX 指南（可访问性、动画、布局）
+- 25+ 图表类型
+- 9 个技术栈支持
 
-**触发词：** "设计 UI"、"Review UX"、"生成配色"、"创建着陆页"
+**支持的技术栈：**
+`html-tailwind`、`react`、`nextjs`、`vue`、`svelte`、`swiftui`、`react-native`、`flutter`、`shadcn`、`jetpack-compose`
 
-### Skill Creator
+**工作流：**
+1. 分析需求 → 2. 生成 Design System (`--design-system`) → 3. 补充详细搜索 → 4. 获取技术栈指南
 
-| 命令 | 用途 |
-|------|------|
-| `/skill-creator` | 创建和打包高质量的 Claude Code Skill |
+**命令示例：**
+```bash
+python3 skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness" --design-system -p "Project Name"
+```
 
-**功能：**
-提供 Skill 创建的最佳实践指南、模板初始化脚本 (`init_skill.py`) 和打包校验工具 (`package_skill.py`)。
+---
 
-**触发词：** "创建 skill"、"新建 skill"、"打包 skill"
+### 7. Skill Creator
 
-### Skill 管理命令
+创建和打包高质量的 Claude Code Skill。
 
-| 命令 | 用途 |
-|------|------|
-| `/add_or_update_skill` | 添加或同步 skill 到 `~/.claude/skills` 和 `~/.gemini/antigravity/skills` |
+| 触发词 | 说明 |
+|--------|------|
+| `/skill-creator`、"创建 skill"、"新建 skill"、"打包 skill" | Skill 创建 |
 
-**操作说明：**
+**Skill 结构：**
+```
+skill-name/
+├── SKILL.md (required)     # 主文件，包含 YAML frontmatter 和 Markdown 指南
+├── scripts/                # 可执行脚本
+├── references/             # 参考文档
+└── assets/                 # 输出资源（模板、图标等）
+```
+
+**创建流程：**
+1. 理解 skill 用例 → 2. 规划内容 → 3. 初始化 (`init_skill.py`) → 4. 编辑 → 5. 打包 (`package_skill.py`)
+
+---
+
+### 8. Add or Update Skill
+
+管理 Claude 和 Gemini 的 skill 同步。
 
 | 触发词 | 行为 |
 |--------|------|
-| "添加 skill" | 将指定文件夹添加到两个目录（已存在则跳过）|
-| "更新 skill" | 同步更新，自动处理单边存在的情况 |
+| "添加 skill"、"add skill" | 将指定文件夹添加到两个目录（已存在则跳过）|
+| "更新 skill"、"update skill"、"同步 skill" | 同步更新，自动处理单边存在的情况 |
+
+**目标目录：**
+- Claude: `~/.claude/skills/`
+- Gemini: `~/.gemini/antigravity/skills/`
+- 项目本地: `./skills/`
 
 ---
 
@@ -269,7 +412,43 @@ Go 项目的单元测试指南（字节跳动风格）：
 "帮我给 OrderService 写单元测试"
 ```
 
-### 3. 运行测试
+### 3. 代码质量工具
+
+```bash
+# 代码审查（需要先提供 diff）
+git diff HEAD~1 | /code-review
+
+# 自动修复代码规范
+/code-fixer
+
+# 简化优化代码
+/code-simplifier
+```
+
+### 4. UI/UX 设计
+
+```bash
+# 生成设计系统
+/ui-ux-pro-max
+# 或
+"设计一个 SaaS Dashboard"
+
+# 命令行方式
+python3 skills/ui-ux-pro-max/scripts/search.py "fintech saas" --design-system -p "Project"
+```
+
+### 5. Skill 管理
+
+```bash
+# 创建新 skill
+/skill-creator
+
+# 同步 skill 到 Claude/Gemini
+/add_or_update_skill
+# 然后说 "添加 skill" 或 "更新 skill"
+```
+
+### 6. 运行测试
 
 **Go:**
 ```bash
