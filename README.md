@@ -53,6 +53,10 @@ skills/
 │       └── java-dependencies.md    # Java 依赖配置
 ├── code-simplifier/        # 代码简化优化
 │   └── SKILL.md
+├── skill-creator/          # Skill 创建指南
+│   └── SKILL.md
+├── ui-ux-pro-max/          # UI/UX 设计智能
+│   └── SKILL.md
 ├── add_or_update_skill/    # Skill 管理工具
 │   └── SKILL.md
 └── *.skill                 # 打包后的技能文件 (ZIP 格式)
@@ -96,6 +100,28 @@ skills/
 **支持的语言：** Go、Java、Python
 
 **触发词：** "简化代码"、"优化代码"、"重构代码"、"清理代码"
+
+### UI/UX Design Intelligence
+
+| 命令 | 用途 |
+|------|------|
+| `/ui-ux-pro-max` | UI/UX 设计智能助手 (设计系统、配色、排版、可访问性检查) |
+
+**功能：**
+提供 50+ 风格、97+ 配色方案、57+ 字体搭配的全面设计指南。支持从 "分析需求" 到 "生成 Design System" 再到 "具体实现" 的全流程。
+
+**触发词：** "设计 UI"、"Review UX"、"生成配色"、"创建着陆页"
+
+### Skill Creator
+
+| 命令 | 用途 |
+|------|------|
+| `/skill-creator` | 创建和打包高质量的 Claude Code Skill |
+
+**功能：**
+提供 Skill 创建的最佳实践指南、模板初始化脚本 (`init_skill.py`) 和打包校验工具 (`package_skill.py`)。
+
+**触发词：** "创建 skill"、"新建 skill"、"打包 skill"
 
 ### Skill 管理命令
 
