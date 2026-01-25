@@ -51,6 +51,8 @@ skills/
 │       ├── java-spock.md           # Spock 测试指南
 │       ├── java-junit.md           # JUnit 5 测试指南
 │       └── java-dependencies.md    # Java 依赖配置
+├── code-simplifier/        # 代码简化优化
+│   └── SKILL.md
 ├── add_or_update_skill/    # Skill 管理工具
 │   └── SKILL.md
 └── *.skill                 # 打包后的技能文件 (ZIP 格式)
@@ -84,6 +86,29 @@ skills/
 |------|---------|---------|
 | Go | `go.mod` | Mockey + Testify (Table-Driven) |
 | Java | `pom.xml` / `build.gradle` | Spock 或 JUnit 5 |
+
+### Code Simplifier 命令
+
+| 命令 | 用途 |
+|------|------|
+| `/code-simplifier` | 简化和优化代码，提升清晰度和可维护性 |
+
+**支持的语言：** Go、Java、Python
+
+**触发词：** "简化代码"、"优化代码"、"重构代码"、"清理代码"
+
+### Skill 管理命令
+
+| 命令 | 用途 |
+|------|------|
+| `/add_or_update_skill` | 添加或同步 skill 到 `~/.claude/skills` 和 `~/.gemini/antigravity/skills` |
+
+**操作说明：**
+
+| 触发词 | 行为 |
+|--------|------|
+| "添加 skill" | 将指定文件夹添加到两个目录（已存在则跳过）|
+| "更新 skill" | 同步更新，自动处理单边存在的情况 |
 
 ---
 
