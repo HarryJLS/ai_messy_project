@@ -84,12 +84,19 @@ skills/
 |------|------|
 | `/unit-test` | 自动检测语言，生成单元测试 |
 
+**触发词：** "帮我写单元测试"、"写测试"、"添加单元测试"
+
 **支持的语言：**
 
-| 语言 | 检测文件 | 测试框架 |
-|------|---------|---------|
-| Go | `go.mod` | Mockey + Testify (Table-Driven) |
-| Java | `pom.xml` / `build.gradle` | Spock 或 JUnit 5 |
+| 语言 | 检测文件 | 测试框架 | 风格 |
+|------|---------|---------|------|
+| Go | `go.mod` | Mockey + Testify | Table-Driven Tests |
+| Java | `pom.xml` / `build.gradle` | Spock 或 JUnit 5 | BDD / Given-When-Then |
+
+**设计原则：**
+- **自动检测**：根据项目文件自动选择测试框架
+- **风格统一**：匹配项目现有测试风格
+- **编译版本优先**：Java 依赖版本由编译版本决定，而非运行时
 
 ### Code Simplifier 命令
 
