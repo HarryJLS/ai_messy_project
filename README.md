@@ -10,7 +10,8 @@ Claude Code Skills 和 Workflow 工具集，提供结构化的 TDD 开发工作�
 - **代码质量工具**：Code Review、Code Fixer、Code Simplifier
 - **单元测试工具**：自动检测项目语言，生成符合最佳实践的单元测试
 - **UI/UX 设计智能**：50+ 风格、97+ 配色方案、57+ 字体搭配
-- **文件化规划**：Manus 风格的 `planning-with-files` 工作流，支持复杂任务的“磁盘记忆”
+- **文件化规划**：Manus 风格的 `planning-with-files` 工作流，支持复杂任务的"磁盘记忆"
+- **Superpowers**：完整的软件开发工作流框架，内置 14 个可组合 skills
 - **Skill 管理**：创建、打包、同步 Claude Code Skills
 - **WorkTeam 工作流**：5 人角色分工的产品开发流水线
 
@@ -19,6 +20,7 @@ Claude Code Skills 和 Workflow 工具集，提供结构化的 TDD 开发工作�
 ```text
 ai_messy_project/
 ├── skills/                 # Claude Code Skills (可安装的技能)
+├── other_skills/           # 第三方扩展技能 (superpowers, planning-with-files)
 ├── workflow/               # Workflow 文档 (独立使用的工作流)
 ├── common/                 # 共享参考文档
 ├── CLAUDE.md               # Claude Code 项目指南
@@ -436,7 +438,60 @@ Go 项目的单元测试指南（字节跳动风格）：
 
 包含从外部引入或实验性的扩展能力。
 
-- **planning-with-files**：位于 `other_skills/planning-with-files-x.x.x/`，提供高级任务规划。
+### Superpowers (v4.1.1)
+
+完整的软件开发工作流框架，内置 14 个可组合 skills，支持 Claude Code、Codex、OpenCode 多平台。
+
+**核心理念**：TDD 驱动、系统化优于临时方案、复杂度简化、验证优于声称。
+
+**基本工作流**：
+
+```text
+brainstorming → using-git-worktrees → writing-plans → subagent-driven-development → finishing-a-development-branch
+```
+
+**包含的 Skills**：
+
+| 分类 | Skill | 说明 |
+|------|-------|------|
+| **测试** | test-driven-development | RED-GREEN-REFACTOR 循环 |
+| **调试** | systematic-debugging | 4 阶段根因分析流程 |
+| | verification-before-completion | 确保问题真正修复 |
+| **协作** | brainstorming | 苏格拉底式设计精炼 |
+| | writing-plans | 详细实现计划 |
+| | executing-plans | 批量执行 + 检查点 |
+| | dispatching-parallel-agents | 并发子 Agent 工作流 |
+| | requesting-code-review | 代码审查前检查清单 |
+| | receiving-code-review | 响应审查反馈 |
+| | using-git-worktrees | 并行开发分支 |
+| | finishing-a-development-branch | Merge/PR 决策工作流 |
+| | subagent-driven-development | 两阶段审查的快速迭代 |
+| **元** | writing-skills | 创建新 skills |
+| | using-superpowers | 系统介绍 |
+
+**安装 (Claude Code)**：
+
+```bash
+# 注册 marketplace
+/plugin marketplace add obra/superpowers-marketplace
+
+# 安装插件
+/plugin install superpowers@superpowers-marketplace
+```
+
+**命令**：
+
+| 命令 | 说明 |
+|------|------|
+| `/superpowers:brainstorm` | 交互式设计精炼 |
+| `/superpowers:write-plan` | 创建实现计划 |
+| `/superpowers:execute-plan` | 批量执行计划 |
+
+---
+
+### Planning with Files (Manus 风格)
+
+位于 `other_skills/planning-with-files-x.x.x/`，提供高级任务规划能力。
 
 ---
 
@@ -493,7 +548,24 @@ git diff HEAD~1 | /code-review
 python3 skills/ui-ux-pro-max/scripts/search.py "fintech saas" --design-system -p "Project"
 ```
 
-### 5. Skill 管理
+### 5. Superpowers 工作流
+
+```bash
+# 安装 (首次)
+/plugin marketplace add obra/superpowers-marketplace
+/plugin install superpowers@superpowers-marketplace
+
+# 开始头脑风暴设计
+/superpowers:brainstorm
+
+# 创建实现计划
+/superpowers:write-plan
+
+# 执行计划
+/superpowers:execute-plan
+```
+
+### 6. Skill 管理
 
 ```bash
 # 创建新 skill
@@ -504,7 +576,7 @@ python3 skills/ui-ux-pro-max/scripts/search.py "fintech saas" --design-system -p
 # 然后说 "添加 skill" 或 "更新 skill"
 ```
 
-### 6. 运行测试
+### 7. 运行测试
 
 **Go:**
 
