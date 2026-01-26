@@ -10,12 +10,13 @@ Claude Code Skills 和 Workflow 工具集，提供结构化的 TDD 开发工作�
 - **代码质量工具**：Code Review、Code Fixer、Code Simplifier
 - **单元测试工具**：自动检测项目语言，生成符合最佳实践的单元测试
 - **UI/UX 设计智能**：50+ 风格、97+ 配色方案、57+ 字体搭配
+- **文件化规划**：Manus 风格的 `planning-with-files` 工作流，支持复杂任务的“磁盘记忆”
 - **Skill 管理**：创建、打包、同步 Claude Code Skills
 - **WorkTeam 工作流**：5 人角色分工的产品开发流水线
 
 ## 目录结构
 
-```
+```text
 ai_messy_project/
 ├── skills/                 # Claude Code Skills (可安装的技能)
 ├── workflow/               # Workflow 文档 (独立使用的工作流)
@@ -39,6 +40,7 @@ ai_messy_project/
 | | plan-next | `/plan-next` | 执行下一个任务 (TDD: RED → GREEN → COMMIT) |
 | | plan-log | `/plan-log` | 手动记录架构决策、紧急修复等 |
 | | plan-archive | `/plan-archive` | 归档已完成工作 |
+| | planning-with-files | `/planning-with-files` | Manus 风格文件化规划，适用于复杂多步任务 |
 | **代码质量** | code-review | `/code-review` | 审查代码变更，生成审查报告 |
 | | code-fixer | `/code-fixer` | 自动修复代码规范问题 |
 | | code-simplifier | `/code-simplifier` | 简化优化代码，提升可维护性 |
@@ -49,7 +51,7 @@ ai_messy_project/
 
 ### 目录结构
 
-```
+```text
 skills/
 ├── plan-init/              # 初始化 Agent 框架
 │   └── SKILL.md
@@ -59,6 +61,10 @@ skills/
 │   └── SKILL.md
 ├── plan-archive/           # 归档已完成的工作
 │   └── SKILL.md
+├── planning-with-files/    # Manus 风格文件化规划
+│   ├── SKILL.md
+│   ├── examples.md         # 示例用法
+│   └── references.md       # 核心原则 (2-Action, 3-Strike)
 ├── code-review/            # 代码审查
 │   ├── SKILL.md
 │   ├── java.md             # 阿里巴巴 Java 规范检查清单
@@ -108,7 +114,8 @@ skills/
 - **TDD 强制**：必须先 RED 再 GREEN
 
 **执行流程：**
-```
+
+```text
 READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 ```
 
@@ -120,13 +127,39 @@ READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 | `/plan-archive` | "归档项目"、"清理工作区"、"备份任务" | 归档到 `archives/YYYY-MM-DD-HHMMSS/` |
 
 **核心文件：**
+
 - `features.json` - 任务的单一事实来源
 - `logs/init.log` - 初始化日志
 - `logs/task-{id}.log` - 每个任务独立日志
 
 ---
 
-### 2. Code Review
+### 2. Planning with Files (Manus 风格)
+
+模仿 Manus 工作流，将“上下文”持久化到磁盘，适用于需要 5 次以上工具调用或复杂研究的任务。
+
+**核心理念**：`Context Window = RAM` (易失), `Filesystem = Disk` (持久)。
+
+**三大工作文件**：
+
+1. `task_plan.md`：阶段规划、进度跟踪、重大决策。
+2. `findings.md`：研究发现、代码片段、探索结论（遵循 **2-Action 规则**：每 2 次查看/搜索操作后必须记录）。
+3. `progress.md`：执行记录、测试结果、详细会话日志。
+
+**错误修复协议 (3-Strike Rule)**：
+
+- **Strike 1**: 诊断并尝试精准修复。
+- **Strike 2**: 换一种方法（不同工具、不同库），禁止重复失败操作。
+- **Strike 3**: 重新思考核心假设或搜索外部方案。
+- **失败后**: 向用户寻求指导。
+
+| 命令 | 触发词 | 说明 |
+|------|--------|------|
+| `/planning-with-files` | "复杂任务规划"、"开始研究"、"Manus 模式" | 初始化三个规划文件并启动任务 |
+
+---
+
+### 3. Code Review
 
 基于 diff 的代码审查，自动检测语言并应用对应规范。
 
@@ -144,6 +177,7 @@ READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 | `*.py`, `server/`, `rag/` | Backend | Python/FastAPI 最佳实践 |
 
 **审查类别：**
+
 - Security (Critical): 硬编码密钥、命令注入、eval 执行
 - Code Quality: console.log、TODO 注释、空 catch 块
 - LLM Code Smells: 占位实现、过度泛化抽象
@@ -153,7 +187,7 @@ READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 
 ---
 
-### 3. Code Fixer
+### 4. Code Fixer
 
 自动修复代码以符合编码规范。
 
@@ -174,7 +208,7 @@ READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 
 ---
 
-### 4. Code Simplifier
+### 5. Code Simplifier
 
 简化和优化代码，提升清晰度、一致性和可维护性。
 
@@ -185,6 +219,7 @@ READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 **支持语言：** Go、Java、Python
 
 **核心原则：**
+
 1. 保持功能不变
 2. 提升清晰度（选择清晰而非简短）
 3. 避免过度简化
@@ -192,7 +227,7 @@ READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 
 ---
 
-### 5. Unit Test
+### 6. Unit Test
 
 自动检测项目语言，生成符合最佳实践的单元测试。
 
@@ -215,13 +250,14 @@ READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 | Java 17+ | `2.4-M4-groovy-4.0` | `org.apache.groovy` |
 
 **Go 测试命令：**
+
 ```bash
 go test -gcflags="all=-l -N" -v ./...
 ```
 
 ---
 
-### 6. UI/UX Pro Max
+### 7. UI/UX Pro Max
 
 UI/UX 设计智能助手，提供全面的设计指南。
 
@@ -230,6 +266,7 @@ UI/UX 设计智能助手，提供全面的设计指南。
 | `/ui-ux-pro-max`、"设计 UI"、"Review UX"、"生成配色"、"创建着陆页" | 设计智能 |
 
 **功能特性：**
+
 - 50+ UI 风格（glassmorphism、minimalism、brutalism 等）
 - 97+ 配色方案（按产品类型分类）
 - 57+ 字体搭配（Google Fonts）
@@ -238,19 +275,22 @@ UI/UX 设计智能助手，提供全面的设计指南。
 - 9 个技术栈支持
 
 **支持的技术栈：**
+
 `html-tailwind`、`react`、`nextjs`、`vue`、`svelte`、`swiftui`、`react-native`、`flutter`、`shadcn`、`jetpack-compose`
 
 **工作流：**
+
 1. 分析需求 → 2. 生成 Design System (`--design-system`) → 3. 补充详细搜索 → 4. 获取技术栈指南
 
 **命令示例：**
+
 ```bash
 python3 skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness" --design-system -p "Project Name"
 ```
 
 ---
 
-### 7. Skill Creator
+### 8. Skill Creator
 
 创建和打包高质量的 Claude Code Skill。
 
@@ -259,7 +299,8 @@ python3 skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness" --design-sy
 | `/skill-creator`、"创建 skill"、"新建 skill"、"打包 skill" | Skill 创建 |
 
 **Skill 结构：**
-```
+
+```text
 skill-name/
 ├── SKILL.md (required)     # 主文件，包含 YAML frontmatter 和 Markdown 指南
 ├── scripts/                # 可执行脚本
@@ -268,11 +309,12 @@ skill-name/
 ```
 
 **创建流程：**
+
 1. 理解 skill 用例 → 2. 规划内容 → 3. 初始化 (`init_skill.py`) → 4. 编辑 → 5. 打包 (`package_skill.py`)
 
 ---
 
-### 8. Add or Update Skill
+### 9. Add or Update Skill
 
 管理 Claude 和 Gemini 的 skill 同步。
 
@@ -282,6 +324,7 @@ skill-name/
 | "更新 skill"、"update skill"、"同步 skill" | 同步更新，自动处理单边存在的情况 |
 
 **目标目录：**
+
 - Claude: `~/.claude/skills/`
 - Gemini: `~/.gemini/antigravity/skills/`
 - 项目本地: `./skills/`
@@ -292,7 +335,7 @@ skill-name/
 
 独立的工作流定义文档，可以直接复制到项目中使用。
 
-```
+```text
 workflow/
 ├── plan-init.md            # 初始化工作流
 ├── plan-next.md            # 任务执行工作流 (TDD 循环)
@@ -314,13 +357,15 @@ workflow/
 - **TDD 强制**：必须先 RED 再 GREEN
 
 **执行流程：**
-```
+
+```text
 READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 ```
 
 ### code-review.md - 代码审查工作流
 
 基于 diff 的代码审查，自动检测语言并应用对应规范：
+
 - **Java**：阿里巴巴 Java 开发规范
 - **Go**：字节跳动 Go 开发规范
 - **Frontend**：React/TypeScript 最佳实践
@@ -329,6 +374,7 @@ READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 ### code-fixer.md - 代码自动修复工作流
 
 自动修复代码规范问题：
+
 - **AUTO**：小问题自动修复（格式、注解、defer Close）
 - **CONFIRM**：大改动需确认（方法拆分、新增构造函数）
 - **SKIP**：禁止修改用户定义的变量名
@@ -346,7 +392,7 @@ READ → EXPLORE → PLAN → RED 🔴 → IMPLEMENT → GREEN 🟢 → COMMIT
 
 可复用的测试指南和工作流定义。
 
-```
+```text
 common/
 ├── spock-test-guide.md     # Spock 单元测试完整指南 (中文)
 ├── go_test_spock.md        # Go 测试指南 (Mockey + Testify)
@@ -356,6 +402,7 @@ common/
 ### spock-test-guide.md
 
 Java/Groovy 项目的 Spock BDD 测试指南：
+
 - 基础结构 (given-when-then)
 - Mock 对象操作
 - 数据驱动测试 (where 块)
@@ -365,6 +412,7 @@ Java/Groovy 项目的 Spock BDD 测试指南：
 ### go_test_spock.md
 
 Go 项目的单元测试指南（字节跳动风格）：
+
 - Table-Driven Tests 结构
 - Mockey 运行时 Mock
 - Testify 断言
@@ -381,6 +429,14 @@ Go 项目的单元测试指南（字节跳动风格）：
 | Nano Banana | `/nano` | 生成 UI 图片到 `assets/` |
 | 前端工程师 | `/fe` | 构建前端界面 |
 | 全栈工程师 | `/full` | 后端开发和迭代 |
+
+---
+
+## 📁 other_skills/ - 第三方扩展技能
+
+包含从外部引入或实验性的扩展能力。
+
+- **planning-with-files**：位于 `other_skills/planning-with-files-x.x.x/`，提供高级任务规划。
 
 ---
 
@@ -451,16 +507,19 @@ python3 skills/ui-ux-pro-max/scripts/search.py "fintech saas" --design-system -p
 ### 6. 运行测试
 
 **Go:**
+
 ```bash
 go test -gcflags="all=-l -N" -v ./...
 ```
 
 **Java (Maven):**
+
 ```bash
 mvn test
 ```
 
 **Java (Gradle):**
+
 ```bash
 ./gradlew test
 ```
@@ -482,6 +541,9 @@ mvn test
 | 文件 | 用途 |
 |------|------|
 | `CLAUDE.md` | Claude Code 读取的项目指南，定义命令和规范 |
+| `task_plan.md` | (在使用 /planning-with-files 时) 任务总案 |
+| `findings.md` | (在使用 /planning-with-files 时) 研究发现记录 |
+| `progress.md` | (在使用 /planning-with-files 时) 会话进度日志 |
 | `.claudeignore` | Claude Code 忽略的文件（.git, .DS_Store, *.skill） |
 | `.gitignore` | Git 忽略的文件（构建产物、依赖、敏感信息） |
 
