@@ -63,7 +63,12 @@ description: 使用 TDD 循环执行下一个待处理任务。当用户说 "/pl
    - 列出将要修改的文件/类/方法
    - 列出相似但**不应修改**的文件/类/方法
    - 如果有 `boundary` 字段，确认理解边界
-4. 写日志
+4. **Service 架构预评估**：
+   - 评估新增功能的复杂度和职责归属
+   - 检查是否有合适的现有 service 可以扩展
+   - 预判是否需要新建 service 或方法抽取
+   - 列出候选的 service 方案：`现有ServiceA.newMethod()` 或 `新建ServiceB`
+5. 写日志
 
 **日志**:
 ```
@@ -71,6 +76,7 @@ description: 使用 TDD 循环执行下一个待处理任务。当用户说 "/pl
 ├─ 状态: planning → red
 ├─ 决策: 技术选型/架构决策要点
 ├─ 文件: new1.ts, new2.ts（将创建）| existing.ts（将修改）
+├─ Service 方案: 扩展 XxxService | 新建 YyyService | 保留在 Controller（原因）
 ├─ 问题: 预见的挑战 → 应对方案
 └─ 下一步: 编写测试用例，确认 RED 状态
 ---
@@ -111,6 +117,17 @@ description: 使用 TDD 循环执行下一个待处理任务。当用户说 "/pl
   - 在运算符、逗号、点号后换行
   - 下一行适当缩进（4 空格或 1 tab）
   - 长字符串用 `+` 分行连接
+- **Service 方法抽取策略**：
+  - **判断抽取时机**：新增方法时评估是否需要抽取到 service
+  - **抽取原则**：
+    - 包含复杂业务逻辑 → 抽取到对应业务 service
+    - 纯技术操作（数据库、缓存、文件）→ 抽取到技术 service
+    - 跨模块通用逻辑 → 抽取到 common/utils service
+    - 简单的属性赋值、格式转换 → 保留在当前类
+  - **命名规范**：
+    - 业务方法：`calculateUserScore()`, `processOrderPayment()`
+    - 技术方法：`saveToCache()`, `sendNotification()`
+    - 工具方法：`formatDate()`, `validateParams()`
 - **疑似确认**（防止误改）：
   - 如果发现相似但不确定是否要改的地方，**停下来列出**
   - 格式：`⚠️ 疑似需要修改：[位置] - [原因] - 请确认是否处理`
@@ -141,6 +158,73 @@ message := "This is a very long error message that exceeds " +
     "the maximum line length limit"
 ```
 
+### 5.1: Service 方法抽取决策流程
+
+每当实现新方法时，按以下流程评估：
+
+```
+新增方法 → 评估复杂度 → 决策抽取
+    ↓
+1. 方法功能分析：
+   ├─ 纯业务逻辑？ → 考虑抽取到 BusinessService
+   ├─ 数据操作？ → 考虑抽取到 DataService/Repository
+   ├─ 外部调用？ → 考虑抽取到 IntegrationService
+   ├─ 工具性质？ → 考虑抽取到 UtilsService
+   └─ 简单转换？ → 保留在当前类
+
+2. 复杂度判断：
+   ├─ 超过 10 行 → 强烈建议抽取
+   ├─ 包含分支判断 → 建议抽取
+   ├─ 有错误处理 → 建议抽取
+   └─ 简单赋值 → 不抽取
+
+3. 可复用性：
+   ├─ 其他地方可能用到 → 必须抽取
+   ├─ 只有当前场景使用 → 根据复杂度决定
+   └─ 与当前类强绑定 → 保留
+
+4. 已有 Service 匹配度：
+   ├─ 完全匹配已有 service 职责 → 添加到已有 service
+   ├─ 部分匹配 → 评估是否扩展已有 service
+   └─ 不匹配 → 创建新 service（需慎重）
+```
+
+**抽取示例场景**：
+
+**✅ 应该抽取**：
+```java
+// 复杂的订单计算逻辑 → OrderCalculationService
+public BigDecimal calculateOrderAmount(Order order) {
+    BigDecimal baseAmount = order.getBasePrice();
+    if (order.hasDiscount()) {
+        baseAmount = applyDiscount(baseAmount, order.getDiscountRate());
+    }
+    if (order.hasShippingFee()) {
+        baseAmount = baseAmount.add(calculateShippingFee(order));
+    }
+    return applyTax(baseAmount, order.getTaxRate());
+}
+
+// 数据库复杂查询 → UserRepository/UserDataService
+public List<User> findActiveUsersWithConditions(UserQuery query) {
+    // 复杂的 SQL 构建和执行逻辑
+}
+```
+
+**❌ 不需要抽取**：
+```java
+// 简单属性设置
+public void updateUserLastLogin(User user) {
+    user.setLastLoginTime(new Date());
+    user.setLoginCount(user.getLoginCount() + 1);
+}
+
+// 简单格式转换
+public String formatUserDisplayName(User user) {
+    return user.getFirstName() + " " + user.getLastName();
+}
+```
+
 ## 阶段 6: GREEN 🟢
 
 1. 运行测试 → 必须全部通过
@@ -159,6 +243,7 @@ message := "This is a very long error message that exceeds " +
 ├─ 状态: green → committing
 ├─ 决策: 实现要点/权衡取舍
 ├─ 文件: impl.ts, test.spec.ts（已完成）
+├─ Service 抽取: 新增 XXXService.methodName() | 保留在当前类（原因）
 ├─ 问题: 遇到 XXX → 通过 YYY 解决（或 none）
 └─ 下一步: 标记任务完成，提交
 ---
