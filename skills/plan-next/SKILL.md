@@ -18,6 +18,7 @@ description: 使用 TDD 循环执行下一个待处理任务。当用户说 "/pl
 - **数据样例必验**：如果任务的 `dataSamples` 字段提供了数据样例，**必须**在 RED 阶段基于样例编写测试用例，在 GREEN 阶段用样例数据验证解析和处理逻辑的正确性
 - **强制完整注释**：每个新写的方法必须有完整注释，每个方法跳转必须有说明注释，不可跳过
 - **不确定必询问**：遇到多种实现方式或关键技术决策不确定时，必须向用户询问，禁止擅自决定
+- **问题收集机制**：开发过程中遇到的问题不立即中断，而是记录到问题列表，在当前阶段结束时统一向用户确认
 
 ## 反合理化检查 - 停止并重新开始
 
@@ -45,6 +46,61 @@ description: 使用 TDD 循环执行下一个待处理任务。当用户说 "/pl
 ├─ 决策: 关键决策（为什么这样做）
 ├─ 文件: file1.ts, file2.ts（已改/将改）
 ├─ 问题: 遇到的问题 → 解决方案（或 none）
+└─ 下一步: 具体下一步操作
+---
+```
+
+## 问题收集规范
+
+开发过程中遇到不确定的问题时，不立即中断流程，而是记录到问题列表，在当前阶段结束时统一向用户确认。
+
+### 问题记录格式
+
+在执行过程中，使用以下格式记录问题：
+
+```
+📋 待确认问题列表：
+
+1. [类型] 问题描述
+   - 背景：为什么会遇到这个问题
+   - 选项 A：方案描述 → 优点/缺点
+   - 选项 B：方案描述 → 优点/缺点
+   - ⭐ 推荐：方案 X，理由是...
+
+2. [类型] 问题描述
+   ...
+```
+
+### 问题类型
+
+| 类型标签 | 说明 | 示例 |
+|---------|------|------|
+| `[技术选型]` | 多种技术方案选择 | 用 Jackson 还是 Gson？ |
+| `[实现方式]` | 具体实现细节决策 | 同步调用还是异步？ |
+| `[边界确认]` | 修改范围不确定 | 这个相似方法是否也需要改？ |
+| `[资源缺失]` | 找不到指定的参考资源 | references 中的方法找不到 |
+| `[样例歧义]` | 数据样例理解有分歧 | 这个字段是可选还是必填？ |
+
+### 收集时机与确认时机
+
+| 阶段 | 收集时机 | 确认时机 |
+|------|---------|---------|
+| EXPLORE | 分析代码时发现不确定点 | EXPLORE 结束、进入 PLAN 前 |
+| PLAN | 规划实现方案时遇到多种选择 | PLAN 结束、进入 RED 前 |
+| RED | 编写测试时对预期行为不确定 | RED 结束、进入 IMPLEMENT 前 |
+| IMPLEMENT | 实现代码时遇到技术决策 | IMPLEMENT 结束、进入 GREEN 前 |
+
+### 日志中记录问题
+
+每个阶段的日志需要包含问题收集情况：
+
+```
+[时间戳] [阶段] Task N: 一句话概述
+├─ 状态: xxx → yyy
+├─ 决策: 关键决策
+├─ 文件: file1.ts, file2.ts
+├─ 待确认问题: N 个（已在阶段结束时向用户确认）
+├─ 用户决策: 问题1→选择A | 问题2→选择B | ...
 └─ 下一步: 具体下一步操作
 ---
 ```
@@ -79,10 +135,13 @@ description: 使用 TDD 循环执行下一个待处理任务。当用户说 "/pl
 ├─ 状态: exploring → planning
 ├─ 决策: 发现 XXX 模式，计划复用/扩展
 ├─ 文件: existing1.ts, existing2.ts（将修改）
-├─ 问题: none
+├─ 待确认问题: N 个
+├─ 用户决策: 问题1→选择X | 问题2→选择Y
 └─ 下一步: 制定实现计划
 ---
 ```
+
+⛔ **阶段门控**：如有待确认问题，必须在进入 PLAN 阶段前向用户统一确认
 
 ## 阶段 3: PLAN
 
@@ -144,7 +203,7 @@ description: 使用 TDD 循环执行下一个待处理任务。当用户说 "/pl
      - 阅读样例数据的结构和字段含义
      - 确认数据格式（JSON/XML/CSV 等）和编码方式
      - 识别特殊字段、嵌套结构、可选字段
-   - ⚠️ 如果找不到 references 中指定的方法或工具，**停下来向用户确认**，不可自行替代
+   - ⚠️ 如果找不到 references 中指定的方法或工具，记录到问题列表（类型：`[资源缺失]`），阶段结束时统一确认
 4. **影响范围确认**：
    - 列出将要修改的文件/类/方法
    - 列出相似但**不应修改**的文件/类/方法
@@ -159,16 +218,19 @@ description: 使用 TDD 循环执行下一个待处理任务。当用户说 "/pl
 **日志**:
 ```
 [时间戳] [Plan] Task N: 计划 XXX 功能
-├─ 状态: planning → red（或 blocked-user-confirm）
+├─ 状态: planning → red（或 pending-confirm）
 ├─ 决策: 技术选型/架构决策要点
 ├─ 文件: new1.ts, new2.ts（将创建）| existing.ts（将修改）
 ├─ 参考资源: 已查找 XxxUtil.method()（位于 src/utils/）| 数据样例已分析（JSON 格式，N 个字段）
 ├─ Service 方案: 扩展 XxxService | 新建 YyyService | 保留在 Controller（原因）
-├─ 用户确认: 需确认技术方案选择 | 实现方式已确定（记录用户决策）
+├─ 待确认问题: N 个
+├─ 用户决策: 问题1→选择A | 问题2→选择B | ...
 ├─ 问题: 预见的挑战 → 应对方案
 └─ 下一步: 编写测试用例，确认 RED 状态
 ---
 ```
+
+⛔ **阶段门控**：如有待确认问题，必须在进入 RED 阶段前向用户统一确认
 
 ## 阶段 4: TDD RED 🔴
 
@@ -273,9 +335,10 @@ result, err := userService.ValidateUser(ctx, userID) // 跳转到用户服务验
   - 下一行适当缩进（4 空格或 1 tab）
   - 长字符串用 `+` 分行连接
 - **疑似确认**（防止误改）：
-  - 如果发现相似但不确定是否要改的地方，**停下来列出**
-  - 格式：`⚠️ 疑似需要修改：[位置] - [原因] - 请确认是否处理`
-  - ⛔ **等待用户确认** 后再继续
+  - 如果发现相似但不确定是否要改的地方，记录到问题列表
+  - 格式：`[边界确认] 疑似需要修改：[位置] - [原因]`
+  - 选项：A) 一并修改 B) 保持不变
+  - 阶段结束时统一确认
 
 ### 5.3: 用户交互机制指导
 
@@ -408,6 +471,162 @@ public String formatUserDisplayName(User user) {
 }
 ```
 
+### 5.5: 异常处理规范（避免过度 try-catch）
+
+**核心原则**：只在必要时使用 try-catch，避免防御性过度编程。
+
+**何时需要 try-catch**：
+| 场景 | 是否需要 | 理由 |
+|------|---------|------|
+| 外部 I/O 操作（文件、网络、数据库） | ✅ 需要 | 外部系统不可控，必须处理失败 |
+| 解析外部输入（JSON、XML） | ✅ 需要 | 输入格式不可控 |
+| 调用第三方库且文档说明会抛异常 | ✅ 需要 | 按库设计使用 |
+| 业务逻辑需要优雅降级 | ✅ 需要 | 明确的业务需求 |
+| 框架要求捕获特定异常 | ✅ 需要 | 遵循框架规范 |
+
+**何时不需要 try-catch**：
+| 场景 | 是否需要 | 正确做法 |
+|------|---------|----------|
+| 可提前校验的参数 | ❌ 不需要 | 用 if 判断，如 `if (obj == null)` |
+| 内部方法调用 | ❌ 不需要 | 信任内部代码，让异常向上传播 |
+| 已知不会失败的操作 | ❌ 不需要 | 不要防御性编程 |
+| 仅为了打印日志 | ❌ 不需要 | 用全局异常处理器 |
+| catch 后只是重新抛出 | ❌ 不需要 | 删除无意义的 try-catch |
+
+**反模式示例**：
+
+```java
+// ❌ 错误：不必要的 try-catch，可用 if 判断
+try {
+    return user.getName().toUpperCase();
+} catch (NullPointerException e) {
+    return "";
+}
+
+// ✅ 正确：提前校验
+if (user == null || user.getName() == null) {
+    return "";
+}
+return user.getName().toUpperCase();
+```
+
+```java
+// ❌ 错误：catch 后只是重新抛出，毫无意义
+try {
+    return service.process(data);
+} catch (Exception e) {
+    throw e;
+}
+
+// ✅ 正确：直接调用，让异常自然传播
+return service.process(data);
+```
+
+```java
+// ❌ 错误：内部方法调用不需要 try-catch
+try {
+    validateInput(input);
+    processData(data);
+    saveResult(result);
+} catch (Exception e) {
+    log.error("处理失败", e);
+    throw new BusinessException("处理失败", e);
+}
+
+// ✅ 正确：让异常自然传播到全局处理器
+validateInput(input);
+processData(data);
+saveResult(result);
+```
+
+**异常日志记录规范**：
+
+当确实需要 try-catch 时，**必须**在 catch 块中打印 error 日志，包含以下关键信息：
+
+| 必须包含 | 说明 | 示例 |
+|---------|------|------|
+| 业务标识 | 单号、订单号、用户ID等 | `orderNo={}`、`userId={}` |
+| 操作描述 | 正在执行什么操作 | `处理订单失败`、`解析响应失败` |
+| 关键参数 | 有助于复现问题的输入，**对象类型必须 JSON 序列化** | `requestId={}`、`param={}` |
+| 缺失信息 | 导致异常的缺失字段或属性 | `缺失字段: username`、`缺少属性: config.timeout` |
+| 异常堆栈 | **必须**将异常对象作为最后一个参数传入 | `log.error("...", e)` |
+
+**日志格式模板**：
+```java
+// 通用格式 - 对象参数使用 JSON 序列化，最后的 e 打印完整堆栈
+log.error("[操作描述] 业务标识={}, 关键参数={}", bizId, JSON.toJSONString(param), e);
+
+// 字段缺失场景
+log.error("[解析失败] orderNo={}, 缺失字段={}, 原始数据={}", orderNo, "username", rawData, e);
+```
+
+```go
+// 通用格式 - 对象参数使用 json.Marshal 序列化，%+v 打印完整错误链
+paramJson, _ := json.Marshal(param)
+log.Error("[操作描述] 业务标识=%s, 关键参数=%s, error=%+v", bizId, string(paramJson), err)
+
+// 或使用 errors 包获取堆栈
+log.Error("[操作描述] 业务标识=%s, stack=%+v", bizId, errors.WithStack(err))
+```
+
+**正确使用示例**：
+
+```java
+// ✅ 正确：外部 I/O 需要 try-catch，记录关键信息 + 完整堆栈
+try {
+    String content = Files.readString(path);
+    return parseJson(content);
+} catch (IOException e) {
+    // 最后的 e 参数会打印完整异常堆栈
+    log.error("[文件读取失败] filePath={}, orderNo={}", path, orderNo, e);
+    return defaultValue;
+}
+
+// ✅ 正确：JSON 解析失败，记录缺失字段 + 堆栈
+try {
+    UserDTO user = objectMapper.readValue(json, UserDTO.class);
+    return user;
+} catch (JsonProcessingException e) {
+    // 记录缺失字段信息，e 作为最后参数打印堆栈
+    log.error("[JSON解析失败] orderNo={}, 缺失或异常字段={}, 原始JSON={}",
+        orderNo, extractMissingField(e), truncate(json, 200), e);
+    throw new BusinessException("用户数据解析失败", e);
+}
+```
+
+```go
+// ✅ 正确：Go 语言记录关键信息 + 错误详情
+result, err := externalAPI.Call(ctx, request)
+if err != nil {
+    // 使用 %+v 打印完整错误链和堆栈（如果 err 支持）
+    log.Error("[调用外部API失败] orderNo=%s, requestId=%s, error=%+v",
+        orderNo, request.ID, err)
+    return nil, fmt.Errorf("调用外部API失败, orderNo=%s: %w", orderNo, err)
+}
+return result, nil
+
+// ✅ 正确：配置解析失败，记录缺失属性
+config, err := parseConfig(data)
+if err != nil {
+    log.Error("[配置解析失败] configId=%s, 缺失属性=%s, error=%+v",
+        configId, extractMissingField(err), err)
+    return nil, fmt.Errorf("配置解析失败, 缺失属性: %w", err)
+}
+```
+
+**自检清单**（写 try-catch 前必须问自己）：
+- [ ] 这个异常真的可能发生吗？
+- [ ] 能否用 if 提前判断来避免异常？
+- [ ] catch 之后我要做什么有意义的事？
+- [ ] 是否应该让异常传播到全局处理器？
+- [ ] 项目是否有统一的异常处理机制？
+- [ ] catch 块是否打印了 error 日志？
+- [ ] 日志是否包含关键业务标识（单号、用户ID等）？
+- [ ] 日志是否说明了缺失的字段或属性（如适用）？
+- [ ] 日志最后是否传入了异常对象以打印完整堆栈？
+
+⛔ **阶段门控**：如有待确认问题，必须在进入 GREEN 阶段前向用户统一确认
+
 ## 阶段 6: GREEN 🟢
 
 1. 运行测试 → 必须全部通过
@@ -478,10 +697,9 @@ public String formatUserDisplayName(User user) {
 |------|------|--------|
 | exploring | 正在分析 | 继续分析或进入 planning |
 | planning | 正在规划 | 写测试，进入 red |
-| blocked-user-confirm | 等待用户确认方案 | 获得用户确认后继续 planning |
+| pending-confirm | 阶段结束，等待用户确认问题列表 | 用户确认后进入下一阶段 |
 | red | 测试已写，待实现 | 写实现代码 |
 | implementing | 正在实现 | 继续实现，然后测试 |
-| blocked-impl-confirm | 实现中需用户确认 | 获得用户确认后继续 implementing |
 | green | 测试通过 | 检查 acceptance，提交 |
 | blocked | 其他阻塞情况 | 解决问题后继续 |
 | done | 完成 | /plan-next |
